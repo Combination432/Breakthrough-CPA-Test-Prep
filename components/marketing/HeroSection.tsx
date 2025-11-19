@@ -11,10 +11,6 @@ export function HeroSection() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Copy */}
           <div>
-            <div className="inline-block px-4 py-2 bg-primary/10 rounded-full text-primary font-semibold text-sm mb-6">
-              Join 10,000+ CPA Candidates
-            </div>
-
             <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
               Pass the CPA Exam Faster.{' '}
               <span className="text-primary">Stop Overpaying.</span>
