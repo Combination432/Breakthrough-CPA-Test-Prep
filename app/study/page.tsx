@@ -112,6 +112,30 @@ export default async function StudyPage() {
           ))}
         </div>
 
+        {/* TBS Demo Section */}
+        <Card className="bg-purple-50 border-purple-200 mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-purple-600" />
+              Try Task-Based Simulations (TBS)
+            </CardTitle>
+            <CardDescription>
+              Experience the interactive spreadsheet interface used in real CPA exam simulations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 mb-4">
+              Task-Based Simulations test your ability to apply knowledge in realistic scenarios.
+              Work with exhibits, complete spreadsheets, and get instant feedback on your calculations.
+            </p>
+            <Link href="/study/tbs/demo">
+              <Button size="lg" variant="outline" className="w-full border-purple-300 hover:bg-purple-100">
+                Launch TBS Demo: Depreciation Schedule
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
         {/* Quick Start Info */}
         <Card className="bg-blue-50 border-blue-200">
           <CardHeader>
