@@ -25,9 +25,17 @@ interface QuestionCardProps {
   }
   questionNumber: number
   onAnswerSubmit?: (isCorrect: boolean, selectedAnswer: string) => void
+  readOnly?: boolean
+  showFeedback?: boolean
 }
 
-export function QuestionCard({ question, questionNumber, onAnswerSubmit }: QuestionCardProps) {
+export function QuestionCard({
+  question,
+  questionNumber,
+  onAnswerSubmit,
+  readOnly = false,
+  showFeedback = true
+}: QuestionCardProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<string>('')
   const [isSubmitted, setIsSubmitted] = useState(false)
 
@@ -35,21 +43,28 @@ export function QuestionCard({ question, questionNumber, onAnswerSubmit }: Quest
     if (!selectedAnswer) return
 
     const isCorrect = selectedAnswer === question.correct_answer
-    setIsSubmitted(true)
+
+    // In exam mode (showFeedback=false), don't set isSubmitted
+    // This prevents showing correct/incorrect feedback
+    if (showFeedback) {
+      setIsSubmitted(true)
+    }
+
     onAnswerSubmit?.(isCorrect, selectedAnswer)
   }
 
   const getOptionClassName = (optionKey: string) => {
-    if (!isSubmitted) {
+    // In exam mode (showFeedback=false), don't show correctness colors
+    if (!showFeedback || !isSubmitted) {
       return 'border-gray-200 hover:border-gray-300'
     }
 
-    // Show correct answer in green
+    // Show correct answer in green (only when showFeedback is true)
     if (optionKey === question.correct_answer) {
       return 'border-green-500 bg-green-50'
     }
 
-    // Show wrong selected answer in red
+    // Show wrong selected answer in red (only when showFeedback is true)
     if (optionKey === selectedAnswer && selectedAnswer !== question.correct_answer) {
       return 'border-red-500 bg-red-50'
     }
@@ -64,7 +79,7 @@ export function QuestionCard({ question, questionNumber, onAnswerSubmit }: Quest
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Question {questionNumber}</span>
-          {isSubmitted && (
+          {showFeedback && isSubmitted && (
             <div className="flex items-center gap-2">
               {isCorrect ? (
                 <span className="flex items-center gap-1 text-green-600 text-sm font-normal">
@@ -116,10 +131,10 @@ export function QuestionCard({ question, questionNumber, onAnswerSubmit }: Quest
                 <span className="font-semibold mr-2">{option.key}.</span>
                 {option.text}
               </Label>
-              {isSubmitted && option.key === question.correct_answer && (
+              {showFeedback && isSubmitted && option.key === question.correct_answer && (
                 <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
               )}
-              {isSubmitted && option.key === selectedAnswer && selectedAnswer !== question.correct_answer && (
+              {showFeedback && isSubmitted && option.key === selectedAnswer && selectedAnswer !== question.correct_answer && (
                 <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
               )}
             </div>
@@ -138,8 +153,8 @@ export function QuestionCard({ question, questionNumber, onAnswerSubmit }: Quest
           </Button>
         )}
 
-        {/* Explanation (shown after submission) */}
-        {isSubmitted && (
+        {/* Explanation (shown after submission in study mode) */}
+        {showFeedback && isSubmitted && (
           <Alert variant={isCorrect ? 'success' : 'default'}>
             <Lightbulb className="h-4 w-4" />
             <AlertTitle>Explanation</AlertTitle>

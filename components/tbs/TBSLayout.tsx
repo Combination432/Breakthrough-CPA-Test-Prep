@@ -12,9 +12,20 @@ import ReactMarkdown from 'react-markdown'
 interface TBSLayoutProps {
   question: TBSQuestion
   onAnswerSubmit?: (rows: GridRow[], isCorrect: boolean) => void
+  onSubmit?: (answers: Record<string, any>) => void
+  readOnly?: boolean
+  showFeedback?: boolean
+  showStem?: boolean
 }
 
-export function TBSLayout({ question, onAnswerSubmit }: TBSLayoutProps) {
+export function TBSLayout({
+  question,
+  onAnswerSubmit,
+  onSubmit,
+  readOnly = false,
+  showFeedback = true,
+  showStem = true
+}: TBSLayoutProps) {
   const [submittedRows, setSubmittedRows] = useState<GridRow[] | null>(null)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [results, setResults] = useState<{
@@ -45,16 +56,29 @@ export function TBSLayout({ question, onAnswerSubmit }: TBSLayoutProps) {
 
     const isCorrect = correctCount === totalCount && totalCount > 0
 
-    setSubmittedRows(rows)
-    setIsSubmitted(true)
-    setResults({
-      isCorrect,
-      correctCount,
-      totalCount,
-    })
+    // Only set results if showing feedback (study mode)
+    if (showFeedback) {
+      setSubmittedRows(rows)
+      setIsSubmitted(true)
+      setResults({
+        isCorrect,
+        correctCount,
+        totalCount,
+      })
+    }
 
+    // Call appropriate callback
     if (onAnswerSubmit) {
       onAnswerSubmit(rows, isCorrect)
+    }
+
+    if (onSubmit) {
+      // Convert rows to Record format for exam mode
+      const answers: Record<string, any> = {}
+      rows.forEach((row) => {
+        answers[row.id] = row
+      })
+      onSubmit(answers)
     }
   }
 
@@ -66,12 +90,14 @@ export function TBSLayout({ question, onAnswerSubmit }: TBSLayoutProps) {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Question Stem */}
-      <div className="bg-white border-b px-6 py-4">
-        <div className="prose prose-sm max-w-none">
-          <ReactMarkdown>{question.stem}</ReactMarkdown>
+      {/* Question Stem (optional) */}
+      {showStem && (
+        <div className="bg-white border-b px-6 py-4">
+          <div className="prose prose-sm max-w-none">
+            <ReactMarkdown>{question.stem}</ReactMarkdown>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Split Panel Layout */}
       <div className="flex-1 overflow-hidden">
@@ -100,8 +126,8 @@ export function TBSLayout({ question, onAnswerSubmit }: TBSLayoutProps) {
         </ResizablePanelGroup>
       </div>
 
-      {/* Results and Explanation */}
-      {isSubmitted && results && (
+      {/* Results and Explanation (only in study mode) */}
+      {showFeedback && isSubmitted && results && (
         <div className="border-t bg-white p-6">
           <Alert variant={results.isCorrect ? 'success' : 'default'}>
             {results.isCorrect ? (
