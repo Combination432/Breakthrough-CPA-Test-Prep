@@ -20,6 +20,15 @@ export async function Navbar() {
             </span>
           </Link>
 
+          {/* Navigation Links */}
+          <div className="flex items-center space-x-6">
+            {user && (
+              <Link href="/study" className="text-gray-700 hover:text-gray-900 font-medium">
+                Study
+              </Link>
+            )}
+          </div>
+
           {/* Auth Section */}
           <div className="flex items-center space-x-4">
             {user ? (
