@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PerformanceChart } from '@/components/dashboard/PerformanceChart'
 import { RecentActivity } from '@/components/dashboard/RecentActivity'
+import { ExamSections } from '@/components/dashboard/ExamSections'
 import { Trophy, Target, Flame } from 'lucide-react'
 
 export default async function DashboardPage() {
@@ -13,6 +14,16 @@ export default async function DashboardPage() {
   if (userError || !user) {
     redirect('/login')
   }
+
+  // Check subscription status
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('subscription_status')
+    .eq('user_id', user.id)
+    .single()
+
+  const status = subscription?.subscription_status || 'none'
+  const hasAccess = status === 'active' || status === 'trialing'
 
   // Fetch user's exam attempts
   const { data: exams, error: examsError } = await supabase
@@ -85,6 +96,11 @@ export default async function DashboardPage() {
           <p className="text-gray-600 mt-2">
             Track your progress and performance across all CPA exam sections
           </p>
+        </div>
+
+        {/* Exam Sections */}
+        <div className="mb-8">
+          <ExamSections hasAccess={hasAccess} />
         </div>
 
         {/* KPI Cards */}
