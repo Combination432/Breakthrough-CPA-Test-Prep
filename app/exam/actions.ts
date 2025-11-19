@@ -2,7 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { MOCK_FAR_EXAM, MockMCQQuestion, MockTBSQuestion } from '@/lib/mock-exam-structure'
+import { getExamWithQuestions } from '@/lib/supabase/queries'
+import type { MCQQuestion, TBSQuestion } from '@/lib/supabase/queries'
 
 export interface ExamAnswer {
   questionId: string
@@ -46,12 +47,11 @@ export async function submitExam(
       return { success: false, error: 'User not authenticated' }
     }
 
-    // For now, we'll use the mock exam structure
-    // In production, you would fetch from the database
-    const exam = MOCK_FAR_EXAM
+    // Fetch exam structure from database
+    const exam = await getExamWithQuestions(sectionCode)
 
-    if (exam.sectionCode !== sectionCode) {
-      return { success: false, error: 'Exam section mismatch' }
+    if (!exam) {
+      return { success: false, error: 'Exam not found in database' }
     }
 
     // Initialize grading variables
@@ -69,7 +69,7 @@ export async function submitExam(
 
         if (question.type === 'MCQ') {
           mcqTotal++
-          const mcqQuestion = question as MockMCQQuestion
+          const mcqQuestion = question as MCQQuestion
           const selectedAnswer = userAnswer?.answer as string
           const isCorrect = selectedAnswer === mcqQuestion.correct_answer
 
@@ -85,7 +85,7 @@ export async function submitExam(
           })
         } else if (question.type === 'TBS') {
           tbsTotal++
-          const tbsQuestion = question as MockTBSQuestion
+          const tbsQuestion = question as TBSQuestion
           const userTBSAnswer = userAnswer?.answer as Record<string, any>
 
           // Calculate partial credit for TBS
