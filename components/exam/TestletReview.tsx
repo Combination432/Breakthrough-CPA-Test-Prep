@@ -11,6 +11,8 @@ interface TestletReviewProps {
   questions: { id: string; type: string; stem: string }[]
   onNavigateToQuestion: (questionIndex: number) => void
   onSubmitTestlet: () => void
+  isLastTestlet?: boolean
+  isSubmitting?: boolean
 }
 
 export function TestletReview({
@@ -19,6 +21,8 @@ export function TestletReview({
   questions,
   onNavigateToQuestion,
   onSubmitTestlet,
+  isLastTestlet = false,
+  isSubmitting = false,
 }: TestletReviewProps) {
   const { answers, flags } = useExamStore()
 
@@ -121,9 +125,24 @@ export function TestletReview({
               onClick={onSubmitTestlet}
               size="lg"
               className="min-w-[200px]"
+              disabled={isSubmitting}
             >
-              Submit Testlet {testletNumber}
-              <ChevronRight className="ml-2 h-4 w-4" />
+              {isSubmitting ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Submitting...
+                </>
+              ) : isLastTestlet ? (
+                <>
+                  Submit Exam
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </>
+              ) : (
+                <>
+                  Submit Testlet {testletNumber}
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           </div>
         </CardContent>

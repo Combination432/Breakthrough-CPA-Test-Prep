@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useExamStore } from '@/lib/store/exam-store'
 import { MOCK_FAR_EXAM, MockQuestion, MockMCQQuestion, MockTBSQuestion } from '@/lib/mock-exam-structure'
 import { QuestionCard } from '@/components/quiz/QuestionCard'
@@ -9,9 +9,11 @@ import { TBSLayout } from '@/components/tbs/TBSLayout'
 import { TestletReview } from '@/components/exam/TestletReview'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
+import { submitExam } from '../actions'
 
 export default function ExamPage() {
   const params = useParams()
+  const router = useRouter()
   const examId = params.examId as string
 
   const {
@@ -22,10 +24,14 @@ export default function ExamPage() {
     submitAnswer,
     goToQuestion,
     nextTestlet,
+    answers,
+    examSectionCode,
+    timeLeft,
   } = useExamStore()
 
   const [isReviewMode, setIsReviewMode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Initialize exam on mount
   useEffect(() => {
@@ -66,9 +72,38 @@ export default function ExamPage() {
   const currentQuestion = currentTestlet.questions[currentQuestionIndex]
 
   // Handle submitting testlet and moving to next
-  const handleSubmitTestlet = () => {
-    setIsReviewMode(false)
-    nextTestlet()
+  const handleSubmitTestlet = async () => {
+    const isLastTestlet = currentTestletIndex === MOCK_FAR_EXAM.testlets.length - 1
+
+    if (isLastTestlet) {
+      // Submit the entire exam
+      setIsSubmitting(true)
+
+      try {
+        // Calculate time spent (initial time - time left)
+        const timeSpent = MOCK_FAR_EXAM.timeLimit - timeLeft
+
+        // Submit the exam
+        const result = await submitExam(examId, examSectionCode, answers, timeSpent)
+
+        if (result.success && result.result) {
+          // Redirect to review page
+          router.push(`/exam/${examId}/review`)
+        } else {
+          console.error('Error submitting exam:', result.error)
+          alert(`Error submitting exam: ${result.error}`)
+          setIsSubmitting(false)
+        }
+      } catch (error) {
+        console.error('Error submitting exam:', error)
+        alert('An error occurred while submitting the exam')
+        setIsSubmitting(false)
+      }
+    } else {
+      // Just move to next testlet
+      setIsReviewMode(false)
+      nextTestlet()
+    }
   }
 
   // Handle navigating from review to a specific question
@@ -79,6 +114,8 @@ export default function ExamPage() {
 
   // Show review screen if in review mode
   if (isReviewMode) {
+    const isLastTestlet = currentTestletIndex === MOCK_FAR_EXAM.testlets.length - 1
+
     return (
       <TestletReview
         testletNumber={currentTestlet.testletNumber}
@@ -90,6 +127,8 @@ export default function ExamPage() {
         }))}
         onNavigateToQuestion={handleNavigateToQuestion}
         onSubmitTestlet={handleSubmitTestlet}
+        isLastTestlet={isLastTestlet}
+        isSubmitting={isSubmitting}
       />
     )
   }
